@@ -1,0 +1,6 @@
+venv
+__pycache__
+credentials/
+.env
+key.json
+secret.py
