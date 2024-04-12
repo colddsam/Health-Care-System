@@ -1,12 +1,11 @@
-from fastapi import FastAPI, Query
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from python.gspread import GspreadOperation
+from python.sheetOperation import GspreadConnection
 from datetime import datetime
 import secret as sc
-SERVICE_ACCOUNT_FILE=sc.SERVICE_ACCOUNT_FILE
-SCOPES = sc.SCOPES
-SPREADSHEET_ID = sc.SPREADSHEET_ID
 
+SERVICE_ACCOUNT_FILE = sc.SERVICE_ACCOUNT_FILE
+SCOPES = sc.SCOPES
 
 app = FastAPI()
 
@@ -18,37 +17,33 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-gspread = GspreadOperation(
-    SERVICE_ACCOUNT_FILE=SERVICE_ACCOUNT_FILE,
-    SCOPES=SCOPES,
-    SPREADSHEET_ID=SPREADSHEET_ID
-)
+gspread=GspreadConnection(SERVICE_ACCOUNT_FILE=SERVICE_ACCOUNT_FILE,SCOPES=SCOPES)
 
-
-@app.post('/')
-def rootpage():
+@app.get('/')
+def root():
     return 'This is ESP 8266 backend fetch API'
 
 @app.post('/append/')
-async def append(heart_rate=float,spo2=float,temperature=float):
+async def append(title:str,heart_rate:float,spo2:float,temperature:float):
     try:
         value = [datetime.now().strftime("%m/%d/%Y, %H:%M:%S"), heart_rate,spo2,temperature]
-        res = gspread.append_data(value)
+        res = gspread.appendData(title=title,data=value)
+        return {"report": res}
+    except Exception as e:
+        return {"report": "negative", "error": str(e)}
+    
+@app.post('/addsheet/')
+async def addSheet(title:str):
+    try:
+        res = gspread.addWorksheet(title=title)
         return {"report": res}
     except Exception as e:
         return {"report": "negative", "error": str(e)}
 
-# @app.get("/connection/")
-# async def update_content(data: float = Query(...)):
-#     try:
-#         value = [datetime.now().strftime("%m/%d/%Y, %H:%M:%S"), data]
-#         res = gspread.append_data(value)
-#         return {"report": res}
-#     except Exception as e:
-#         return {"report": "negative", "error": str(e)}
-
-
 @app.get("/show/")
-async def show():
-    res = gspread.show_data()
-    return res
+async def show(title:str):
+    try:
+        res = gspread.showData(title=title)
+        return res
+    except Exception as e:
+        return {"report": "negative", "error": str(e)}
