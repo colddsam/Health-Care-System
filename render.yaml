@@ -1,7 +1,7 @@
 services:
   - type: web
     name: Health Care System
-    runtime: python_3.10
+    runtime: python-3.10
     plan: free
     autoDeploy: true
     buildCommand: pip install -r requirements.txt
