@@ -10,19 +10,33 @@ class GspreadConnection:
         client = gspread.authorize(creds)
         self.sheet = client.open('sensor new data')
 
-    def addWorksheet(self, title: str):
-        worksheet = self.sheet.add_worksheet(title=title, rows=10000, cols=4)
+    def addWorksheet(self, _id: str):
+        worksheet = self.sheet.add_worksheet(title=_id, rows=10000, cols=4)
         data = ['Date Time', 'Blood Oxygen', 'Temperature', 'Heart Rate']
         worksheet.append_row(data)
         return worksheet
 
-    def appendData(self, title: str, data: list):
-        sheet_instance = self.sheet.worksheet(title)
+    def appendData(self, _id: str, data: list):
+        sheet_instance = self.sheet.worksheet(_id)
         return sheet_instance.append_row(data)
 
-    def showData(self, title: str):
-        sheet_instance = self.sheet.worksheet(title)
+    def showData(self, _id: str):
+        sheet_instance = self.sheet.worksheet(_id)
         data = pd.DataFrame(sheet_instance.get_all_values())
+        data = data.replace('','0')
+        data=data.fillna(0)
+        data.columns = ['Date Time','Blood Oxygen', 'Temperature', 'Heart Rate']
+        data=data.drop(index=0)
+        convert_directory = {
+            'Blood Oxygen': float,
+            'Temperature': float,
+            'Heart Rate': float
+        }
+        data = data.astype(convert_directory)
+        data=data.tail(30)
+        data=data.reset_index(drop=True)
         return data
+
+
 
 

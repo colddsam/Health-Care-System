@@ -7,3 +7,6 @@ test.py
 secret.py
 data/
 arduino/
+test.csv
+train.ipynb
+frontend
