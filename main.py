@@ -12,6 +12,8 @@ import secret as sc
 
 load_dotenv()
 
+temp=100
+
 MONGOUSERNAME = sc.MONGOUSERNAME
 MONGOPASSWORD = sc.MONGOPASSWORD
 SMTP_USERNAME = sc.EMAIL_ID
@@ -19,13 +21,14 @@ SMTP_PASSWORD = sc.PASSWORD
 SERVICE_ACCOUNT_FILE = sc.SERVICE_ACCOUNT_FILE
 SCOPES = ['https://spreadsheets.google.com/feeds',
           'https://www.googleapis.com/auth/drive']
+ClientID:int
 
 app = FastAPI()
 smtp = SMTPserver(SMTP_USERNAME=SMTP_USERNAME, SMTP_PASSWORD=SMTP_PASSWORD)
 gspread = GspreadConnection(
     SERVICE_ACCOUNT_FILE=SERVICE_ACCOUNT_FILE, SCOPES=SCOPES)
 mongo = MongoConnection(username=MONGOUSERNAME, password=MONGOPASSWORD)
-
+getClientID=MongoConnection(username=MONGOUSERNAME,password=MONGOPASSWORD,collectionName='device data')
 
 class User(BaseModel):
     name: str
@@ -51,17 +54,25 @@ app.add_middleware(
 
 
 @app.get('/')
-def root():
+async def root():
     return 'This is ESP 8266 backend fetch API'
 
+@app.post('/assign/')
+async def assign(deviceid:int,clientid:int):
+    try:
+        res=getClientID.assignDevice(deviceid=deviceid,clientid=clientid)
+        return {"report":"positive","response":res}
+    except Exception as e:
+        return {"report":"negative","response":e}
 
 @app.post('/append/')
 async def append(_id: int, data: Data):
     try:
         data_dict = data.model_dump()
+        clientid=getClientID.getClientID(deviceid=_id)
         value = [datetime.now().strftime(
             "%m/%d/%Y, %H:%M:%S"), data_dict['spo2'], data_dict['temperature'], data_dict['heart_rate']]
-        res = gspread.appendData(_id=str(_id), data=value)
+        res = gspread.appendData(_id=str(clientid), data=value)
         return {"report": res}
     except Exception as e:
         return {"report": "negative", "error": str(e)}

@@ -1,7 +1,7 @@
 
 from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
-
+import random
 
 class MongoConnection:
     def __init__(self, username, password, databaseName='HealthCare', collectionName='profile data') -> None:
@@ -17,3 +17,21 @@ class MongoConnection:
     def find(self, _id):
         res = self.myCol.find_one({'_id': _id})
         return res
+
+
+
+    def assignDevice(self, deviceid, clientid):
+        filter = {'deviceid': deviceid}
+        update = {'$set': {'clientid': clientid}}
+        res = self.myCol.find_one_and_update(filter, update)
+        if not res:
+            _id=random.randint(100000, 999999)
+            res = self.myCol.insert_one({'_id':_id,'deviceid': deviceid, 'clientid': clientid})
+        return 'successfully appended'
+
+    def getClientID(self, deviceid):
+        res = self.myCol.find_one({'deviceid': deviceid})
+        if res:
+            return res['clientid']
+        return res
+    
