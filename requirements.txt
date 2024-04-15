@@ -1,5 +1,5 @@
 python-dotenv
-pymongo[srv]
+pymongo[ocsp]
 gspread
 fastapi
 uvicorn
