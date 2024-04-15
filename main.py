@@ -42,6 +42,7 @@ class Data(BaseModel):
     heart_rate: float
     spo2: float
     temperature: float
+    ECGSignal:float
 
 
 app.add_middleware(
@@ -71,7 +72,7 @@ async def append(_id: int, data: Data):
         data_dict = data.model_dump()
         clientid=getClientID.getClientID(deviceid=_id)
         value = [datetime.now().strftime(
-            "%m/%d/%Y, %H:%M:%S"), data_dict['spo2'], data_dict['temperature'], data_dict['heart_rate']]
+            "%m/%d/%Y, %H:%M:%S"), data_dict['spo2'], data_dict['temperature'], data_dict['heart_rate'], data_dict['ECGSignal']]
         res = gspread.appendData(_id=str(clientid), data=value)
         return {"report": res}
     except Exception as e:

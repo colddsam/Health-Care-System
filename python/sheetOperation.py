@@ -12,7 +12,8 @@ class GspreadConnection:
 
     def addWorksheet(self, _id: str):
         worksheet = self.sheet.add_worksheet(title=_id, rows=10000, cols=4)
-        data = ['Date Time', 'Blood Oxygen', 'Temperature', 'Heart Rate']
+        data = ['Date Time', 'Blood Oxygen',
+                'Temperature', 'Heart Rate', 'ECG Signal']
         worksheet.append_row(data)
         return worksheet
 
@@ -25,12 +26,14 @@ class GspreadConnection:
         data = pd.DataFrame(sheet_instance.get_all_values())
         data = data.replace('','0')
         data=data.fillna(0)
-        data.columns = ['Date Time','Blood Oxygen', 'Temperature', 'Heart Rate']
+        data.columns = ['Date Time', 'Blood Oxygen',
+                        'Temperature', 'Heart Rate', 'ECG Signal']
         data=data.drop(index=0)
         convert_directory = {
             'Blood Oxygen': float,
             'Temperature': float,
-            'Heart Rate': float
+            'Heart Rate': float,
+            'ECG Signal':float
         }
         data = data.astype(convert_directory)
         data=data.tail(30)
