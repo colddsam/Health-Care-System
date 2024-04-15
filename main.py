@@ -8,14 +8,15 @@ import random
 from python.sheetOperation import GspreadConnection
 from python.smtpOperation import SMTPserver
 from python.mongoOperation import MongoConnection
+import secret as sc
 
 load_dotenv()
 
-MONGOUSERNAME = os.environ['MONGOUSERNAME']
-MONGOPASSWORD = os.environ['MONGOPASSWORD']
-SMTP_USERNAME = os.environ['EMAIL_ID']
-SMTP_PASSWORD = os.environ['PASSWORD']
-SERVICE_ACCOUNT_FILE = os.environ['SERVICE_ACCOUNT_FILE']
+MONGOUSERNAME = sc.MONGOUSERNAME
+MONGOPASSWORD = sc.MONGOPASSWORD
+SMTP_USERNAME = sc.EMAIL_ID
+SMTP_PASSWORD = sc.PASSWORD
+SERVICE_ACCOUNT_FILE = sc.SERVICE_ACCOUNT_FILE
 SCOPES = ['https://spreadsheets.google.com/feeds',
           'https://www.googleapis.com/auth/drive']
 
