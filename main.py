@@ -110,9 +110,20 @@ async def find(_id:str):
 
 
 @app.post("/sendmail/")
-async def mail(value, receiveremail: str):
-    try:
-        res = smtp.sendAlert(value=value, receiver_email=receiveremail)
-        return {"report": "positive", "message": res}
-    except Exception as e:
-        return {"report": "negative", "error": str(e)}
+async def mail(value:int,_id: str):
+    _id=int(_id)
+    if _id:
+        res=getClientID.getClientID(deviceid=_id)
+        user_det=mongo.find(_id=int(res))
+        email=user_det['email']
+        try:
+            res = smtp.sendAlert(value=value, receiver_email=email)
+            return res
+        except Exception as e:
+            return {"report": "negative", "error": e}
+    return {"report":"negative","error":"id not assigned"}
+    # try:
+    #     res = smtp.sendAlert(value=value, receiver_email=receiveremail)
+    #     return {"report": "positive", "message": res}
+    # except Exception as e:
+    #     return {"report": "negative", "error": str(e)}

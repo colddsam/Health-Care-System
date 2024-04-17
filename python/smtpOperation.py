@@ -22,10 +22,8 @@ class SMTPserver:
         msgRoot['Subject'] = subject
 
         text = """\n
-        Please wear the Ambu Bag!!!\n
-        Your SpO2 level has decresed to {}%.\n
-        You may follow this video if you want the tutorial\n
-        https://colddsam.vercel.app/
+        Your SpO2 level has decreased to {}%.\n
+        Please wear the mask the oxygen supply process has started!!!\n
         """.format(str(value))
 
         message = MIMEText(text, "plain")
