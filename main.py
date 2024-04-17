@@ -44,7 +44,10 @@ class Data(BaseModel):
     temperature: float
     ECGSignal:float
 
-
+class Device(BaseModel):
+    value: float
+    id: str
+    
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -110,7 +113,10 @@ async def find(_id:str):
 
 
 @app.post("/sendmail/")
-async def mail(value:int,_id: str):
+async def mail(device:Device):
+    data=device.model_dump()
+    _id=data['id']
+    value=data['value']
     _id=int(_id)
     if _id:
         res=getClientID.getClientID(deviceid=_id)
@@ -122,8 +128,4 @@ async def mail(value:int,_id: str):
         except Exception as e:
             return {"report": "negative", "error": e}
     return {"report":"negative","error":"id not assigned"}
-    # try:
-    #     res = smtp.sendAlert(value=value, receiver_email=receiveremail)
-    #     return {"report": "positive", "message": res}
-    # except Exception as e:
-    #     return {"report": "negative", "error": str(e)}
+
