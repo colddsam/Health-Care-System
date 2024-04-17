@@ -99,6 +99,14 @@ async def show(_id: str):
         return res
     except Exception as e:
         return {"report": "negative", "error": str(e)}
+    
+@app.get("/find/")
+async def find(_id:str):
+    try:
+        res=mongo.find(_id=int(_id))
+        return res
+    except Exception as e:
+        return {"report": "negative", "error": str(e)}
 
 
 @app.post("/sendmail/")
