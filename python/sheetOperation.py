@@ -1,5 +1,6 @@
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
+from datetime import datetime
 import pandas as pd
 
 
@@ -40,6 +41,16 @@ class GspreadConnection:
         data=data.reset_index(drop=True)
         return data
 
+    def lastData(self,_id: str):
+        sheet_instance=self.sheet.worksheet(_id)
+        data=sheet_instance.col_values(2)
+        if(len(data)>1):
+            time=sheet_instance.col_values(1)
+            time=time[-1]
+            if (int((datetime.now()-datetime.strptime(time, '%m/%d/%Y, %H:%M:%S')).total_seconds()) <= 60):
+                return int(data[-1])
+        return 0
+    
 
 
 

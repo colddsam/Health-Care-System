@@ -129,3 +129,11 @@ async def mail(device:Device):
             return {"report": "negative", "error": e}
     return {"report":"negative","error":"id not assigned"}
 
+@app.get("/data/")
+async def getData(_id:str):
+    try:
+        data=gspread.lastData(_id)
+        return data
+    except Exception as e:
+        return {"report": "negative", "error": str(e)}
+
