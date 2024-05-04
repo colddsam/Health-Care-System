@@ -130,10 +130,19 @@ async def mail(device:Device):
     return {"report":"negative","error":"id not assigned"}
 
 @app.get("/data/")
-async def getData(_id:str):
+async def getData(_id:int):
     try:
-        data=gspread.lastData(_id)
+        clientid = getClientID.getClientID(deviceid=_id)
+        data=gspread.lastData(str(clientid))
         return data
+    except Exception as e:
+        return {"report": "negative", "error": str(e)}
+
+@app.get("/test/")
+async def getTime():
+    try:
+        return datetime.now().strftime(
+            "%m/%d/%Y, %H:%M:%S")
     except Exception as e:
         return {"report": "negative", "error": str(e)}
 
