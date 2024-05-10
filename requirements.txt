@@ -7,3 +7,4 @@ pydantic
 oauth2client
 pandas
 xgboost
+scikit-learn
