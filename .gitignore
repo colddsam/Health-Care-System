@@ -10,3 +10,6 @@ arduino/
 test.csv
 train.ipynb
 frontend
+test.html
+.vscode
+model.json

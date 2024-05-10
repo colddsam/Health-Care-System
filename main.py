@@ -8,12 +8,13 @@ import random
 from python.sheetOperation import GspreadConnection
 from python.smtpOperation import SMTPserver
 from python.mongoOperation import MongoConnection
+from python.mlModels import mlModel
 import secret as sc
 
 load_dotenv()
 
 temp=100
-
+MODELPATH=sc.MODELPATH
 MONGOUSERNAME = sc.MONGOUSERNAME
 MONGOPASSWORD = sc.MONGOPASSWORD
 SMTP_USERNAME = sc.EMAIL_ID
@@ -29,6 +30,7 @@ gspread = GspreadConnection(
     SERVICE_ACCOUNT_FILE=SERVICE_ACCOUNT_FILE, SCOPES=SCOPES)
 mongo = MongoConnection(username=MONGOUSERNAME, password=MONGOPASSWORD)
 getClientID=MongoConnection(username=MONGOUSERNAME,password=MONGOPASSWORD,collectionName='device data')
+ml=mlModel(model_path=MODELPATH)
 
 class User(BaseModel):
     name: str
@@ -73,9 +75,10 @@ async def assign(deviceid:int,clientid:int):
 async def append(_id: int, data: Data):
     try:
         data_dict = data.model_dump()
-        clientid=getClientID.getClientID(deviceid=_id)
+        clientid = getClientID.getClientID(deviceid=_id)
+        stressLevel = ml.stressCalculation([data_dict['heart_rate']])
         value = [datetime.now().strftime(
-            "%m/%d/%Y, %H:%M:%S"), data_dict['spo2'], data_dict['temperature'], data_dict['heart_rate'], data_dict['ECGSignal']]
+            "%m/%d/%Y, %H:%M:%S"), data_dict['spo2'], data_dict['temperature'], data_dict['heart_rate'], data_dict['ECGSignal'],stressLevel]
         res = gspread.appendData(_id=str(clientid), data=value)
         return {"report": res}
     except Exception as e:
@@ -145,4 +148,3 @@ async def getTime():
             "%m/%d/%Y, %H:%M:%S")
     except Exception as e:
         return {"report": "negative", "error": str(e)}
-
