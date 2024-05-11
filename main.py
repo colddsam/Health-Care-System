@@ -78,6 +78,12 @@ async def append(_id: int, data: Data):
         data_dict = data.model_dump()
         clientid = getClientID.getClientID(deviceid=_id)
         stressLevel = ml.stressCalculation([data_dict['heart_rate']])
+        if(data_dict['spo2']<=0):
+            data_dict["spo2"]=-1
+        if((data_dict['heart_rate']>=160)or(data_dict['heart_rate']<=50)):
+            data_dict['heart_rate']=-1
+        if(data_dict["temperature"]<=0):
+            data_dict['temperature']=-1
         value = [datetime.now().strftime(
             "%m/%d/%Y, %H:%M:%S"), data_dict['spo2'], data_dict['temperature'], data_dict['heart_rate'], data_dict['ECGSignal'],stressLevel]
         res = gspread.appendData(_id=str(clientid), data=value)
