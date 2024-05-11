@@ -9,6 +9,7 @@ from python.sheetOperation import GspreadConnection
 from python.smtpOperation import SMTPserver
 from python.mongoOperation import MongoConnection
 from python.mlModels import mlModel
+from python.clipText import gretingSystem, alertText
 import secret as sc
 
 load_dotenv()
@@ -90,7 +91,7 @@ async def addUser(user: User):
     data = user.model_dump()
     data['_id'] = random.randint(100000, 999999)
     try:
-        smtp.sendID(value=data['_id'], receiver_email=data['email'])
+        smtp.sendID(gretingSystem=gretingSystem(value=data["_id"]), receiver_email=data['email'])
         mongo.createData(data=data)
         gspread.addWorksheet(_id=str(data['_id']))
         return {"report": 'positive', 'message': 'operation successful'}
@@ -126,7 +127,7 @@ async def mail(device:Device):
         user_det=mongo.find(_id=int(res))
         email=user_det['email']
         try:
-            res = smtp.sendAlert(value=value, receiver_email=email)
+            res = smtp.sendAlert(alertText=alertText(value=value), receiver_email=email)
             return res
         except Exception as e:
             return {"report": "negative", "error": e}
