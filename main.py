@@ -80,7 +80,7 @@ async def append(_id: int, data: Data):
         stressLevel = ml.stressCalculation([data_dict['heart_rate']])
         if(data_dict['spo2']<=0):
             data_dict["spo2"]=-1
-        if((data_dict['heart_rate']>=160)or(data_dict['heart_rate']<=50)):
+        if((data_dict['heart_rate']>=200)or(data_dict['heart_rate']<=40)):
             data_dict['heart_rate']=-1
         if(data_dict["temperature"]<=0):
             data_dict['temperature']=-1
