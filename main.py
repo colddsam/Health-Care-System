@@ -82,6 +82,7 @@ async def append(_id: int, data: Data):
             data_dict["spo2"]=-1
         if((data_dict['heart_rate']>=200)or(data_dict['heart_rate']<=40)):
             data_dict['heart_rate']=-1
+            stressLevel=-1
         if(data_dict["temperature"]<=0):
             data_dict['temperature']=-1
         value = [datetime.now().strftime(
