@@ -36,9 +36,11 @@ ml=mlModel(model_path=MODELPATH)
 class User(BaseModel):
     name: str
     email: str
+    password:str
     phNo: int
     age: int
     bloodGroup: str
+    gender:str
 
 
 class Data(BaseModel):
@@ -96,14 +98,18 @@ async def append(_id: int, data: Data):
 @app.post('/adduser/')
 async def addUser(user: User):
     data = user.model_dump()
-    data['_id'] = random.randint(100000, 999999)
-    try:
-        smtp.sendID(gretingSystem=gretingSystem(value=data["_id"]), receiver_email=data['email'])
-        mongo.createData(data=data)
-        gspread.addWorksheet(_id=str(data['_id']))
-        return {"report": 'positive', 'message': 'operation successful'}
-    except Exception as e:
-        return {"report": "negative", "error": str(e)}
+    res = mongo.findUserId(email=data['email'], password=data["password"])
+    if(res):
+        return None
+    else:
+        data['_id'] = random.randint(100000, 999999)
+        try:
+            smtp.sendID(gretingSystem=gretingSystem(value=data["_id"]), receiver_email=data['email'])
+            mongo.createData(data=data)
+            gspread.addWorksheet(_id=str(data['_id']))
+            return {"report": 'positive', 'message': 'operation successful'}
+        except Exception as e:
+            return {"report": "negative", "error": str(e)}
 
 
 @app.get("/show/")
@@ -118,6 +124,15 @@ async def show(_id: str):
 async def find(_id:str):
     try:
         res=mongo.find(_id=int(_id))
+        return res
+    except Exception as e:
+        return {"report": "negative", "error": str(e)}
+    
+
+@app.get("/finduser/")
+async def findUserId(email: str,password:str):
+    try:
+        res = mongo.findUserId(email=email, password=password)
         return res
     except Exception as e:
         return {"report": "negative", "error": str(e)}

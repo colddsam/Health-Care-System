@@ -18,7 +18,15 @@ class MongoConnection:
         res = self.myCol.find_one({'_id': _id})
         return res
 
-
+    def findUserId(self, email:str,password:str|None=None):
+        if(password):
+            res = self.myCol.find_one({'email': email, 'password':password})
+        else:
+            res = self.myCol.find_one({'email': email})
+        if res:
+            return res['_id']
+        else:
+            return None
 
     def assignDevice(self, deviceid, clientid):
         filter = {'deviceid': deviceid}
