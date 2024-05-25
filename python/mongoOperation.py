@@ -13,6 +13,50 @@ class MongoConnection:
     def createData(self, data):
         res = self.myCol.insert_one(data)
         return res
+    
+    def initDevice(self, deviceid):
+        res = self.myCol.find_one({'device': deviceid})
+        if res:
+            return None
+        else:
+            res = self.myCol.insert_one({'device': deviceid, 'client': 0})
+    
+    def assignDevice(self, deviceid: int, doctorid: int):
+        filter = {'_id': doctorid}
+        update = {'$set': {f'devices.{deviceid}': 0}}
+        res = self.myCol.find_one_and_update(filter, update)
+        return res
+    
+    def assignUser(self, doctorid: int, clientid: int, deviceid: int):
+        filter = {'_id': doctorid}
+        
+        try:
+            res=self.myCol.find_one(filter)
+            if res:
+                if(len(res['devices'])>1):
+                    for key,val in res['devices'].items():
+                        if val==clientid:
+                            update = {'$set': {f'devices.{key}': 0}}
+                            res =self.myCol.find_one_and_update(
+                                filter, update)
+                            break
+        except Exception as e:
+            print(e)
+        update = {'$set': {f'devices.{deviceid}': clientid}}
+        res = self.myCol.find_one_and_update(filter, update)
+        return res
+
+    def assignConnection(self, deviceid: int, clientid: int):
+        filter={'client':clientid}
+        update={'$set':{'client':0}}
+        try:
+            res=self.myCol.find_one_and_update(filter,update)
+        except Exception as e:
+            pass
+        filter = {'device': deviceid}
+        update = {'$set': {'client': clientid}}
+        res = self.myCol.find_one_and_update(filter, update)
+        return res
 
     def find(self, _id):
         res = self.myCol.find_one({'_id': _id})
@@ -28,18 +72,18 @@ class MongoConnection:
         else:
             return None
 
-    def assignDevice(self, deviceid, clientid):
-        filter = {'deviceid': deviceid}
-        update = {'$set': {'clientid': clientid}}
-        res = self.myCol.find_one_and_update(filter, update)
-        if not res:
-            _id=random.randint(100000, 999999)
-            res = self.myCol.insert_one({'_id':_id,'deviceid': deviceid, 'clientid': clientid})
-        return 'successfully appended'
+    
+    # def updateDevice(Self,deviceid,clientid):
+    #     filter={'client':clientid}
+    #     update={'device':deviceid}
+    #     res=Self.myCol.find_one_and_update(filter,update)
+    
+
+    
 
     def getClientID(self, deviceid):
-        res = self.myCol.find_one({'deviceid': deviceid})
+        res = self.myCol.find_one({'device': deviceid})
         if res:
-            return res['clientid']
+            return res['client']
         return res
     

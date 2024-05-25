@@ -26,11 +26,13 @@ SCOPES = ['https://spreadsheets.google.com/feeds',
 ClientID:int
 
 app = FastAPI()
+
 smtp = SMTPserver(SMTP_USERNAME=SMTP_USERNAME, SMTP_PASSWORD=SMTP_PASSWORD)
 gspread = GspreadConnection(
     SERVICE_ACCOUNT_FILE=SERVICE_ACCOUNT_FILE, SCOPES=SCOPES)
-mongo = MongoConnection(username=MONGOUSERNAME, password=MONGOPASSWORD)
-getClientID=MongoConnection(username=MONGOUSERNAME,password=MONGOPASSWORD,collectionName='device data')
+getPatient = MongoConnection(username=MONGOUSERNAME, password=MONGOPASSWORD)
+getDevice=MongoConnection(username=MONGOUSERNAME,password=MONGOPASSWORD,collectionName='device data')
+getDoctor=MongoConnection(username=MONGOUSERNAME,password=MONGOPASSWORD,collectionName='doctors data')
 ml=mlModel(model_path=MODELPATH)
 
 class User(BaseModel):
@@ -42,6 +44,16 @@ class User(BaseModel):
     bloodGroup: str
     gender:str
 
+
+class Doctor(BaseModel):
+    registration:int
+    name: str
+    email: str
+    password: str
+    phNo: int
+    age: int
+    bloodGroup: str
+    gender: str
 
 class Data(BaseModel):
     heart_rate: float
@@ -64,21 +76,31 @@ app.add_middleware(
 
 @app.get('/')
 async def root():
-    return 'This is ESP 8266 backend fetch API'
+    return 'This is Health Mate backend fetch API'
 
 @app.post('/assign/')
-async def assign(deviceid:int,clientid:int):
+async def assign(deviceid: int, doctorid: int):
     try:
-        res=getClientID.assignDevice(deviceid=deviceid,clientid=clientid)
-        return {"report":"positive","response":res}
+        res=getDevice.initDevice(deviceid=deviceid)
+        res=getDoctor.assignDevice(deviceid=deviceid,doctorid=doctorid)
+        return {"report": "positive", "response": res}
     except Exception as e:
         return {"report":"negative","response":e}
+
+@app.post('/patient/')
+async def assignPatient(doctorid:int,patientid:int,deviceid:int):
+    try:
+        res=getDevice.assignConnection(deviceid=deviceid,clientid=patientid)
+        res=getDoctor.assignUser(doctorid=doctorid,clientid=patientid,deviceid=deviceid)    
+        return {"report": "positive", "response": res}
+    except Exception as e:
+        return {"report": "negative", "response": e}
 
 @app.post('/append/')
 async def append(_id: int, data: Data):
     try:
         data_dict = data.model_dump()
-        clientid = getClientID.getClientID(deviceid=_id)
+        clientid = getDevice.getClientID(deviceid=_id)
         stressLevel = ml.stressCalculation([data_dict['heart_rate']])
         if(data_dict['spo2']<=0):
             data_dict["spo2"]=-1
@@ -98,18 +120,37 @@ async def append(_id: int, data: Data):
 @app.post('/adduser/')
 async def addUser(user: User):
     data = user.model_dump()
-    res = mongo.findUserId(email=data['email'], password=data["password"])
+    res = getPatient.findUserId(email=data['email'], password=data["password"])
     if(res):
         return None
     else:
         data['_id'] = random.randint(100000, 999999)
         try:
             smtp.sendID(gretingSystem=gretingSystem(value=data["_id"]), receiver_email=data['email'])
-            mongo.createData(data=data)
+            getPatient.createData(data=data)
             gspread.addWorksheet(_id=str(data['_id']))
             return {"report": 'positive', 'message': 'operation successful'}
         except Exception as e:
             return {"report": "negative", "error": str(e)}
+        
+
+@app.post('/adddoctor/')
+async def addDoctor(user: Doctor):
+    data = user.model_dump()
+    res = getDoctor.findUserId(email=data['email'], password=data["password"])
+    if (res):
+        return None
+    else:
+        data['_id'] = random.randint(100000, 999999)
+        data["devices"]={}
+        try:
+            smtp.sendID(gretingSystem=gretingSystem(
+                value=data["_id"]), receiver_email=data['email'])
+            res=getDoctor.createData(data=data)
+            return {"report": 'positive', 'message': 'operation successful'}
+        except Exception as e:
+            return {"report": "negative", "error": str(e)}
+
 
 
 @app.get("/show/")
@@ -123,16 +164,33 @@ async def show(_id: str):
 @app.get("/find/")
 async def find(_id:str):
     try:
-        res=mongo.find(_id=int(_id))
+        res=getPatient.find(_id=int(_id))
+        return res
+    except Exception as e:
+        return {"report": "negative", "error": str(e)}
+    
+@app.get("/getdoctor/")
+async def find(_id:str):
+    try:
+        res=getDoctor.find(_id=int(_id))
+        return res
+    except Exception as e:
+        return {"report": "negative", "error": str(e)}
+
+
+@app.get("/finduser/")
+async def findUserId(email: str,password:str):
+    try:
+        res = getPatient.findUserId(email=email, password=password)
         return res
     except Exception as e:
         return {"report": "negative", "error": str(e)}
     
 
-@app.get("/finduser/")
+@app.get("/finddoctor/")
 async def findUserId(email: str,password:str):
     try:
-        res = mongo.findUserId(email=email, password=password)
+        res = getDoctor.findUserId(email=email, password=password)
         return res
     except Exception as e:
         return {"report": "negative", "error": str(e)}
@@ -145,8 +203,8 @@ async def mail(device:Device):
     value=data['value']
     _id=int(_id)
     if _id:
-        res=getClientID.getClientID(deviceid=_id)
-        user_det=mongo.find(_id=int(res))
+        res=getDevice.getClientID(deviceid=_id)
+        user_det=getPatient.find(_id=int(res))
         email=user_det['email']
         try:
             res = smtp.sendAlert(alertText=alertText(value=value), receiver_email=email)
@@ -158,7 +216,7 @@ async def mail(device:Device):
 @app.get("/data/")
 async def getData(_id:int):
     try:
-        clientid = getClientID.getClientID(deviceid=_id)
+        clientid = getDevice.getClientID(deviceid=_id)
         data=gspread.lastData(str(clientid))
         return data
     except Exception as e:
