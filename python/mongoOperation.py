@@ -17,13 +17,13 @@ class MongoConnection:
     def initDevice(self, deviceid):
         res = self.myCol.find_one({'device': deviceid})
         if res:
-            return None
+            return res
         else:
             res = self.myCol.insert_one({'device': deviceid, 'client': 0})
     
-    def assignDevice(self, deviceid: int, doctorid: int):
+    def assignDevice(self, deviceid: int, doctorid: int, clientid: int):
         filter = {'_id': doctorid}
-        update = {'$set': {f'devices.{deviceid}': 0}}
+        update = {'$set': {f'devices.{deviceid}': clientid}}
         res = self.myCol.find_one_and_update(filter, update)
         return res
     

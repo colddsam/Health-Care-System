@@ -82,7 +82,11 @@ async def root():
 async def assign(deviceid: int, doctorid: int):
     try:
         res=getDevice.initDevice(deviceid=deviceid)
-        res=getDoctor.assignDevice(deviceid=deviceid,doctorid=doctorid)
+        clientid=0
+        if(res):
+            clientid=res["client"]
+            
+        res=getDoctor.assignDevice(deviceid=deviceid,doctorid=doctorid,clientid=clientid)
         return {"report": "positive", "response": res}
     except Exception as e:
         return {"report":"negative","response":e}
