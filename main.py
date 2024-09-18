@@ -180,6 +180,14 @@ async def find(_id:str):
         return res
     except Exception as e:
         return {"report": "negative", "error": str(e)}
+    
+@app.get("/getdevices/")
+async def get(_id:str):
+    try:
+        res=getDoctor.find(_id=int(_id))
+        return res["devices"]
+    except Exception as e:
+        return {"report": "negative", "error": str(e)}
 
 
 @app.get("/finduser/")

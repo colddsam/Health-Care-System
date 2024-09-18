@@ -23,9 +23,14 @@ class MongoConnection:
     
     def assignDevice(self, deviceid: int, doctorid: int, clientid: int):
         filter = {'_id': doctorid}
+        res=self.myCol.update_many(
+        { f'devices.{deviceid}': { '$exists': True } },
+        { '$unset': { f'devices.{deviceid}': "" } }
+        )
         update = {'$set': {f'devices.{deviceid}': clientid}}
         res = self.myCol.find_one_and_update(filter, update)
         return res
+    
     
     def assignUser(self, doctorid: int, clientid: int, deviceid: int):
         filter = {'_id': doctorid}
