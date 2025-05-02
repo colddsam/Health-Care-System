@@ -15,7 +15,8 @@ import secret as sc
 load_dotenv()
 
 temp=100
-MODELPATH=sc.MODELPATH
+XGMODELPATH=sc.XGMODELPATH
+BPMODELPATH=sc.BPMODELPATH
 MONGOUSERNAME = sc.MONGOUSERNAME
 MONGOPASSWORD = sc.MONGOPASSWORD
 SMTP_USERNAME = sc.EMAIL_ID
@@ -33,7 +34,7 @@ gspread = GspreadConnection(
 getPatient = MongoConnection(username=MONGOUSERNAME, password=MONGOPASSWORD)
 getDevice=MongoConnection(username=MONGOUSERNAME,password=MONGOPASSWORD,collectionName='device data')
 getDoctor=MongoConnection(username=MONGOUSERNAME,password=MONGOPASSWORD,collectionName='doctors data')
-ml=mlModel(model_path=MODELPATH)
+ml=mlModel(xgmodel_path=XGMODELPATH,bpmodel_path=BPMODELPATH)
 
 class User(BaseModel):
     name: str
@@ -60,7 +61,7 @@ class Data(BaseModel):
     spo2: float
     temperature: float
     ECGSignal:float
-    PPG: list[float]
+    PPG: list[int]
 
 class Device(BaseModel):
     value: float
@@ -105,19 +106,19 @@ async def assignPatient(doctorid:int,patientid:int,deviceid:int):
 async def append(_id: int, data: Data):
     try:
         data_dict = data.model_dump()
-        print(data_dict)
-        # clientid = getDevice.getClientID(deviceid=_id)
-        # stressLevel = ml.stressCalculation([data_dict['heart_rate']])
-        # if(data_dict['spo2']<=0):
-        #     data_dict["spo2"]=-1
-        # if((data_dict['heart_rate']>=200)or(data_dict['heart_rate']<=40)):
-        #     data_dict['heart_rate']=-1
-        #     stressLevel=-1
-        # if(data_dict["temperature"]<=0):
-        #     data_dict['temperature']=-1
-        # value = [datetime.now().strftime(
-        #     "%m/%d/%Y, %H:%M:%S"), data_dict['spo2'], data_dict['temperature'], data_dict['heart_rate'], data_dict['ECGSignal'],stressLevel]
-        # res = gspread.appendData(_id=str(clientid), data=value)
+        clientid = getDevice.getClientID(deviceid=_id)
+        stressLevel = ml.stressCalculation([data_dict['heart_rate']])
+        sbp,dbp=ml.bpCalculation(SignalInput=data_dict['PPG'])
+        if(data_dict['spo2']<=0):
+            data_dict["spo2"]=-1
+        if((data_dict['heart_rate']>=200)or(data_dict['heart_rate']<=40)):
+            data_dict['heart_rate']=-1
+            stressLevel=-1
+        if(data_dict["temperature"]<=0):
+            data_dict['temperature']=-1
+        value = [datetime.now().strftime(
+            "%m/%d/%Y, %H:%M:%S"), data_dict['spo2'], data_dict['temperature'], data_dict['heart_rate'], data_dict['ECGSignal'],stressLevel,sbp,dbp]
+        res = gspread.appendData(_id=str(clientid), data=value)
         return {"report": res}
     except Exception as e:
         return {"report": "negative", "error": str(e)}

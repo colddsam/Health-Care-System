@@ -8,3 +8,5 @@ oauth2client
 pandas
 xgboost
 scikit-learn
+torch
+numpy
